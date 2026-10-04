@@ -77,3 +77,7 @@ Grok Build は `.claude/skills` と `AGENTS.md` も読む。二重に置かな�
 2. 構築を頼む。本文はまだ書かせない。
 3. 話を指定して執筆を頼む。
 4. 推敲は Codex にレビューとして頼む。
+
+## ライセンス
+
+[Apache License 2.0](LICENSE)
