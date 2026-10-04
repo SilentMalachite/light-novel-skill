@@ -52,6 +52,15 @@ class RuleTest(unittest.TestCase):
         twice = "俺は息を呑んだ。\n\n彼女も息をのんだ。\n"
         self.assertEqual(lines_of(twice, "AI定型"), [3])
 
+    def test_ai_phrase_flagged_on_every_repeat(self):
+        text = "俺は息を呑んだ。\n\n彼も息を呑んだ。\n\n皆が息を呑んだ。\n"
+        self.assertEqual(lines_of(text, "AI定型"), [3, 5])
+
+    def test_emoji_presentation_symbols(self):
+        self.assertEqual(lines_of("前置き。\n\n雷だ⚡\n", "記号"), [3])
+        self.assertEqual(lines_of("前置き。\n\n好き\u2764\ufe0f\n", "記号"), [3])
+        self.assertEqual(lines_of("前置き。\n\n「ありがと♪」\n\n「好き♡」\n\n「★3つ」\n", "記号"), [])
+
     def test_emotion_label_at_paragraph_end(self):
         self.assertEqual(lines_of("前置き。\n\n俺は悲しかった。\n", "感情ラベル"), [3])
         self.assertEqual(lines_of("前置き。\n\n俺は緊張していた。\n", "感情ラベル"), [3])
@@ -110,7 +119,9 @@ class RuleTest(unittest.TestCase):
 
     def test_finding_keeps_matched_text(self):
         finding = check_style.check("前置き。\n\n「行くよ。」\n")[0]
-        self.assertEqual(finding.match, "。」")
+        self.assertEqual(finding.match, "「行くよ。」")
+        finding = check_style.check("前置き。\n\n**運命**だった。\n")[0]
+        self.assertEqual(finding.match, "**運命**だった。")
         finding = check_style.check("前置き。\n\n" + "あ" * 61 + "。\n")[0]
         self.assertEqual(finding.match, "あ" * 61 + "。")
 
@@ -124,6 +135,10 @@ class FixTest(unittest.TestCase):
     def test_removes_period_before_closing_bracket(self):
         self.assertEqual(check_style.fix("前置き。\n\n「行くよ。」\n"), "前置き。\n\n「行くよ」\n")
         self.assertEqual(check_style.fix("前置き。\n\n『題。』だ。\n"), "前置き。\n\n『題』だ。\n")
+
+    def test_keeps_text_symbols(self):
+        self.assertEqual(check_style.fix("前置き。\n\n「ありがと♪」\n"), "前置き。\n\n「ありがと♪」\n")
+        self.assertEqual(check_style.fix("前置き。\n\n晴れた\u2600\ufe0f\n"), "前置き。\n\n晴れた。\n")
 
     def test_removes_markup_and_closes_sentence(self):
         self.assertEqual(check_style.fix("前置き。\n\n**運命**だった✨\n"), "前置き。\n\n運命だった。\n")
@@ -188,6 +203,20 @@ class CompareTest(unittest.TestCase):
         self.assertEqual(result["new"], {"長文": 1})
         self.assertEqual([f["line"] for f in result["new_findings"]], [5])
         self.assertFalse(result["ok"])
+
+    def test_same_kind_period_on_another_line_is_new(self):
+        before = "前置き。\n\n「行くよ。」\n\n「待って」\n"
+        after = "前置き。\n\n「行くよ」\n\n「待って。」\n"
+        result = check_style.compare(before, after)
+        self.assertEqual(result["new"], {"句点": 1})
+        self.assertEqual([f["line"] for f in result["new_findings"]], [5])
+
+    def test_duplicate_reports_later_line_as_new(self):
+        long = "あ" * 61 + "。"
+        before = "前置き。\n\n" + long + "\n"
+        after = "前置き。\n\n" + long + "\n\n" + long + "\n"
+        result = check_style.compare(before, after)
+        self.assertEqual([f["line"] for f in result["new_findings"]], [5])
 
     def test_empty_baseline_is_not_within_length(self):
         result = check_style.compare("# 第1話\n", "# 第1話\n\n本文だ。\n")
@@ -283,6 +312,13 @@ class CliTest(unittest.TestCase):
             self.assertIn("「おはよう。今日もいい天気だね」", text)
             self.assertNotIn("**", text)
 
+    def test_fix_counts_only_fixed_kinds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "ep.md"
+            path.write_text("前置き。\n\n**" + "あ" * 59 + "**。\n", encoding="utf-8")
+            result = self.run_args("--fix", "--json", str(path))
+            self.assertEqual(json.loads(result.stdout)["fixed"], {"記号": 1})
+
     def test_fix_requires_file(self):
         result = self.run_args("--fix", stdin="「行くよ。」\n")
         self.assertEqual(result.returncode, 2)
@@ -302,7 +338,7 @@ class CliTest(unittest.TestCase):
             base.write_text("前置き。\n\n「行くよ」\n", encoding="utf-8")
             result = self.run_args("--baseline", str(base), str(path))
             self.assertEqual(result.returncode, 1)
-            self.assertIn("3行目「行くよ」→ 3行目「行かない」", result.stdout)
+            self.assertIn("3行目「行くよ」 → 3行目「行かない」", result.stdout)
             self.assertIn("違反 0件 / 比較 要確認", result.stdout)
 
     def test_baseline_lists_new_finding_lines(self):

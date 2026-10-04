@@ -50,10 +50,15 @@ SIMILE_END = re.compile(r"(まるで.*|かの)(よう|みたい)だ(った)?。$
 NO_CHAIN = re.compile(r"の[^、。！？「」『』の\s]{1,6}の[^、。！？「」『』の\s]{1,6}の")
 OPENING = re.compile(r"目を覚ま|目が覚め|目覚まし|アラーム|朝の光|朝日|日差し|陽射し|青空|快晴|雨が|晴れ|通学路|登校")
 SUMMARY_END = re.compile(r"^こうして|一日が終わ")
-EMOJI = "[\U0001F000-\U0001FAFF✨✅❌⭐]\uFE0F?(?:\u200D[\U0001F000-\U0001FAFF\u2600-\u27BF]\uFE0F?)*"
+# ♪♡★ などセリフで使う記号は残し、絵文字として表示されるものだけを拾う。
+EMOJI = (
+    "(?:[\U0001F000-\U0001FAFF✨✅❌⭐⚡⛔⭕❗❓]\uFE0F?|[\u2600-\u27BF]\uFE0F)"
+    "(?:\u200D[\U0001F000-\U0001FAFF\u2600-\u27BF]\uFE0F?)*"
+)
 MARKUP = re.compile(r"\*\*|" + EMOJI)
 TRAILING_EMOJI = re.compile("[ \t　]*(?:" + EMOJI + ")+[ \t　]*$")
 PERIOD_BEFORE_CLOSE = re.compile(r"。(?=[」』])")
+QUOTE_WITH_PERIOD = re.compile(r"[「『][^「」『』]*。[」』]")
 QUOTE = re.compile(r"「([^」]*)」|『([^』]*)』")
 QUOTE_PUNCT = re.compile(r"[。！？!?…‥\s]")
 SCENE_BREAK = re.compile(r"^[※＊*◇◆]+[\s　※＊*◇◆]*$")
@@ -96,6 +101,14 @@ def body(sentence):
     return sentence.rstrip(TERMINATORS)
 
 
+def sentence_at(line, pos):
+    """pos を含む文を返す。違反の該当箇所を、比較で突き合わせられる長さにする。"""
+    for m in SENTENCE.finditer(line):
+        if m.start() <= pos < m.end():
+            return m.group().strip()
+    return line
+
+
 def check(text):
     rows = [(i, *classify(raw)) for i, raw in enumerate(text.splitlines(), 1)]
     prose = [(i, k, l) for i, k, l in rows if k in ("narration", "dialogue")]
@@ -134,15 +147,19 @@ def check(text):
         for pattern, label in AI_PHRASES:
             for m in re.finditer(pattern, line):
                 seen[label] = seen.get(label, 0) + 1
-                if seen[label] == 2:
-                    add("AI定型", i, f"「{label}」が2回目。1話1回まで。動作か状況に置き換える。", m.group())
+                if seen[label] >= 2:
+                    add(
+                        "AI定型", i, f"「{label}」が{seen[label]}回目。1話1回まで。動作か状況に置き換える。",
+                        sentence_at(line, m.start()),
+                    )
 
         m = re.search(r"。[」』]", line)
         if m:
-            add("句点", i, "閉じ括弧の前に句点がある。句点を取る。", m.group())
+            quote = QUOTE_WITH_PERIOD.search(line)
+            add("句点", i, "閉じ括弧の前に句点がある。句点を取る。", quote.group() if quote else line)
         m = MARKUP.search(line)
         if m:
-            add("記号", i, "本文に太字記法か絵文字がある。外す。", m.group())
+            add("記号", i, "本文に太字記法か絵文字がある。外す。", sentence_at(line, m.start()))
 
         if kind == "dialogue":
             ending_key, ending_run = None, 0
@@ -255,12 +272,13 @@ def compare(before, after):
     old = Counter((f.kind, f.match) for f in old_findings)
     new = Counter((f.kind, f.match) for f in new_findings)
     added = new - old
-    unmatched = Counter(added)
+    kept = old & new
     listed = []
     for f in new_findings:
         key = (f.kind, f.match)
-        if unmatched[key]:
-            unmatched[key] -= 1
+        if kept[key]:
+            kept[key] -= 1
+        else:
             listed.append(asdict(f))
     old_q, new_q = quotes(before), quotes(after)
     matcher = difflib.SequenceMatcher(
@@ -313,7 +331,7 @@ def print_compare(result):
         for c in result["dialogue_changes"]:
             old = f"{c['before_line']}行目「{c['before']}」" if c["before"] is not None else "なし"
             new = f"{c['after_line']}行目「{c['after']}」" if c["after"] is not None else "削除"
-            print(f"- セリフ: {old}→ {new}" if c["before"] is not None else f"- セリフ: 追加 {new}")
+            print(f"- セリフ: {old} → {new}" if c["before"] is not None else f"- セリフ: 追加 {new}")
     else:
         print("- セリフ: 変更なし")
     before, after = result["chars"]["before"], result["chars"]["after"]
@@ -329,7 +347,7 @@ def read(path):
 
 
 def main(argv):
-    for stream in (sys.stdin, sys.stdout):
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="ラノベ本文の機械チェック")
     parser.add_argument("file", nargs="?", help="本文。省略すると標準入力")
@@ -350,7 +368,8 @@ def main(argv):
             with open(tmp, "w", encoding="utf-8", newline="") as f:
                 f.write(text)
             os.replace(tmp, args.file)
-        fixed = dict(before - Counter(f.kind for f in check(text)))
+        gone = before - Counter(f.kind for f in check(text))
+        fixed = {k: gone[k] for k in ("句点", "記号") if gone[k]}
     findings = check(text)
     s = stats(text)
     result = compare(read(args.baseline), text) if args.baseline else None
