@@ -28,7 +28,7 @@ license: Apache-2.0
 | --- | --- | --- |
 | 構築 | ログライン、結末、キャラ口調、話ビート、場面カード | 本文、世界設定の百科 |
 | 執筆 | 指定シーンまたは指定章の本文 | 前後章の先書き、新キャラの追加 |
-| 推敲 | 視点漏れ、説明、AI調、口調の検査と最小修正。文体チェックとAI臭さチェック | 筋の勝手な改変、文体の盛り直し |
+| 推敲 | 視点漏れ、説明、AI調、口調の検査と最小修正。レビュー、文体チェック、AI臭さチェックは書き換えずに違反を返す | 筋の勝手な改変、文体の盛り直し |
 
 不足があるときの質問は最大3つ。足りないまま本文を書かない。
 
@@ -37,7 +37,7 @@ license: Apache-2.0
 - 構成と場面カード: [references/structure.md](references/structure.md)
 - 文体: [references/style.md](references/style.md)
 - 雛形: [references/templates.md](references/templates.md)
-- レビュー（Codex 向け）: [references/review.md](references/review.md)
+- レビュー: [references/review.md](references/review.md)
 - 文体チェックとAI臭さチェック: [references/check.md](references/check.md)
 
 ## 仕様
@@ -61,7 +61,7 @@ license: Apache-2.0
 6. 書いた直後に、視点の越境、説明台詞、同一語尾3連続、章末フックを検査する。
 7. 差分の要約は頼まれたときだけ、3行以内。
 
-Codex でレビューを頼まれたときは本文を書き換えず、[references/review.md](references/review.md) の違反を箇所つきで返す。
+レビューを頼まれたときは、どのエージェントでも本文を書き換えず、[references/review.md](references/review.md) の形で違反を箇所つきで返す。本文を直すのは推敲を頼まれたときだけ。
 
 ラノベらしい文体か、AI臭くないかのチェックを頼まれたときは、本文を書き換えず [references/check.md](references/check.md) の手順で返す。`plot.md` が無くても行う。
 
