@@ -183,6 +183,8 @@ def stats(text):
 
 
 def main(argv):
+    for stream in (sys.stdin, sys.stdout):
+        stream.reconfigure(encoding="utf-8")
     if len(argv) > 1:
         with open(argv[1], encoding="utf-8") as f:
             text = f.read()

@@ -1,5 +1,6 @@
 # light-novel スキル
 
+[![CI](https://github.com/SilentMalachite/light-novel-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/SilentMalachite/light-novel-skill/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/SilentMalachite/light-novel-skill)](LICENSE)
 [![npx skills add](https://img.shields.io/badge/npx%20skills%20add-SilentMalachite%2Flight--novel--skill-blue)](https://github.com/vercel-labs/skills)
 [![Agents](https://img.shields.io/badge/agents-Claude%20Code%20%7C%20Codex%20%7C%20Grok%20Build-8A2BE2)](#エージェント別の置き場所)

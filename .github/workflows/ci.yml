@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -v
+
+  install:
+    name: npx skills add
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+      - name: Install into a temp project
+        run: |
+          work="$(mktemp -d)"
+          cd "$work"
+          npx -y skills@latest add "$GITHUB_WORKSPACE" -a claude-code --copy -y
+          for f in SKILL.md assets/plot.md assets/characters.md \
+                   scripts/check_style.py scripts/init_work.py references/check.md; do
+            test -f ".claude/skills/light-novel/$f" || { echo "missing: $f"; exit 1; }
+          done
+          python3 .claude/skills/light-novel/scripts/init_work.py novel
+          test -f novel/plot.md && test -f novel/characters.md

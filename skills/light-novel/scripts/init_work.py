@@ -13,6 +13,7 @@ NAMES = ["plot.md", "characters.md"]
 
 
 def main(argv):
+    sys.stdout.reconfigure(encoding="utf-8")
     work = pathlib.Path(argv[1]) if len(argv) > 1 else pathlib.Path.cwd()
     work.mkdir(parents=True, exist_ok=True)
     for name in NAMES:
