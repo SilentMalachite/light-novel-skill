@@ -1,5 +1,11 @@
 # light-novel スキル
 
+[![License](https://img.shields.io/github/license/SilentMalachite/light-novel-skill)](LICENSE)
+[![npx skills add](https://img.shields.io/badge/npx%20skills%20add-SilentMalachite%2Flight--novel--skill-blue)](https://github.com/vercel-labs/skills)
+[![Agents](https://img.shields.io/badge/agents-Claude%20Code%20%7C%20Codex%20%7C%20Grok%20Build-8A2BE2)](#エージェント別の置き場所)
+[![Python](https://img.shields.io/badge/python-3%20(stdlib%20only)-3776AB?logo=python&logoColor=white)](#ファイル構成)
+[![Last commit](https://img.shields.io/github/last-commit/SilentMalachite/light-novel-skill)](https://github.com/SilentMalachite/light-novel-skill/commits/main)
+
 日本語のライトノベルと Web 小説を、設計ファイルを正本にして書くためのエージェントスキル。企画からプロット、本文、推敲、レビュー、文体チェックまでを扱う。Claude Code、Codex、Grok Build で使える。
 
 初めて使うときは「インストール」と「使い方」だけ読めば足りる。「エージェント別の置き場所」から後ろは、手で配置するときや中身を変えるときに引く。
