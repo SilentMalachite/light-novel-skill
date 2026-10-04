@@ -1,14 +1,16 @@
-# ライトノベル・スキルの置き方
+# light-novel スキル
 
-本体は1本。配置だけ分ける。常時指示はポインタだけ。
+日本語のライトノベルと Web 小説を、設計ファイルを正本にして書くためのエージェントスキル。企画からプロット、本文、推敲、文体チェックまでを扱う。Claude Code、Codex、Grok Build で使える。
 
-## インストール
+初めて使うときは「インストール」と「使い方」だけ読めば足りる。「エージェント別の置き場所」から後ろは、手で配置するときや中身を変えるときに引く。
+
+## インストールは npx skills add の1行で済む
 
 ```bash
 npx skills add SilentMalachite/light-novel-skill
 ```
 
-エージェントを指定するときは `-a` を付ける。個人用（全プロジェクト共通）にするときは `-g` を付ける。
+エージェントを指定するときは `-a`、全プロジェクトで使う個人用にするときは `-g` を付ける。
 
 ```bash
 npx skills add SilentMalachite/light-novel-skill -a claude-code
@@ -16,102 +18,26 @@ npx skills add SilentMalachite/light-novel-skill -a codex
 npx skills add SilentMalachite/light-novel-skill -a grok
 ```
 
-CLAUDE.md と AGENTS.md は入らない。下の各節のとおり手で置く。
+このコマンドで入るのはスキル本体だけで、常時指示の `CLAUDE.md` と `AGENTS.md` は入らない。使うプロジェクトの直下に手で置く。既にあれば末尾に追記する。
 
-## 共通
+## 使い方: 依頼は構築、執筆、推敲のどれか1つにする
 
-手で置くときは `skills/light-novel/` をそのままコピーする。
+スキルは依頼を構築、執筆、推敲の3種類に分け、頼まれた種類の仕事だけをする。1回の依頼で設計と本文をまとめて頼んでも、設計が固まるまで本文は書かない。流れは次のとおり。
 
-```text
-skills/light-novel/
-  SKILL.md
-  references/structure.md
-  references/style.md
-  references/review.md
-  references/templates.md
-  references/check.md
-  assets/plot.md
-  assets/characters.md
-  scripts/check_style.py
-  scripts/init_work.py
-```
+1. 書きたい話を頼む。作品フォルダに `plot.md` と `characters.md` の雛形が置かれ、質問が返る。
+2. 質問に答えて、ログライン、視点、結末、キャラの口調を固める。
+3. 話と場面を指定して本文を頼む。
+4. 書けた本文の推敲か、文体チェックを頼む。
 
-`assets/` は雛形の正本。`scripts/init_work.py` は作品フォルダに雛形を置く。`scripts/check_style.py` は文体チェックの機械検査に使う。どちらも Python 3 の標準ライブラリだけで動く。Python が無くてもスキルは使える。
-
-呼び出し条件は SKILL.md の description、CLAUDE.md、AGENTS.md で同じ文言にしている。
-
-- 使う: 日本語のラノベ、ライトノベル、Web小説について、企画、プロット、キャラ、地の文、セリフ、章立て、文体の作成、執筆、推敲、レビュー、文体やAI臭さのチェックを頼まれたとき。
-- 使わない: 純文学、脚本、論文、翻訳。
-
-変えるときは3つとも直す。
-
-## Claude Code
+### 構築: 「〜を書いて」と頼むと、まず雛形が置かれる
 
 ```text
-.claude/skills/light-novel/     ← skills/light-novel/ をここへ
-CLAUDE.md                       ← 同梱の CLAUDE.md をプロジェクト直下へ（既存があれば末尾に追記）
+コンビニでバイトしてる元魔王が主人公のラノベを書いて
 ```
 
-個人用なら `~/.claude/skills/light-novel/`。このリポジトリでは `.claude/skills/light-novel` を `skills/light-novel/` へのシンボリックリンクにしている。
+「〜を書いて」「〜を執筆して」「〜を作って」のどれで頼んでも、作品フォルダに `plot.md` か `characters.md` が無ければ、先に雛形が置かれる。作品フォルダを指定しなければ作業ディレクトリに置く。既にあるファイルは上書きしない。
 
-呼び出し: 依頼が上の呼び出し条件に合えば自動。明示は `/light-novel`。
-
-## Codex
-
-```text
-.agents/skills/light-novel/     ← skills/light-novel/ をここへ
-AGENTS.md                       ← 同梱の AGENTS.md をリポジトリ直下へ（既存があれば末尾に追記）
-```
-
-個人用なら `~/.agents/skills/light-novel/`。
-
-Codex はレビューを主にする。本文の書き換えを頼まれていないときは `references/review.md` の形で違反だけ返す。
-
-## Grok Build
-
-```text
-.grok/skills/light-novel/       ← skills/light-novel/ をここへ
-AGENTS.md                       ← 同梱の AGENTS.md（Codex と同一でよい）
-```
-
-Grok Build は `.claude/skills` と `AGENTS.md` も読む。二重に置かない。常時文脈は `AGENTS.md` の呼び出し条件1行とルール5行だけにし、手順はスキル起動時に読ませる。
-
-個人用なら `~/.grok/skills/light-novel/`。
-
-## 使わせ方
-
-1. 「〜を書いて」「〜を執筆して」「〜を作って」と頼むと、作品フォルダに `plot.md` と `characters.md` の雛形が自動で置かれる。作品フォルダを指定しなければ作業ディレクトリに置く。既にあるファイルは上書きしない。手で置くときは次を実行する。
-
-   ```bash
-   python3 .claude/skills/light-novel/scripts/init_work.py 作品フォルダ
-   ```
-
-2. 構築を頼む。本文はまだ書かせない。
-3. 話を指定して執筆を頼む。
-4. 推敲は Codex にレビューとして頼む。
-5. 文体やAI臭さを確かめたいときは、本文を渡してチェックを頼む。機械検査だけなら次を実行する。
-
-   ```bash
-   python3 .claude/skills/light-novel/scripts/check_style.py 本文.md
-   ```
-
-   パスはインストール先に合わせる。Codex なら `.agents/skills/`、Grok Build なら `.grok/skills/`。
-
-   ```bash
-   cat 本文.md | python3 .claude/skills/light-novel/scripts/check_style.py
-   ```
-
-## 使い方の例
-
-依頼は1回に1種類だけ出す。構築、執筆、推敲（チェックを含む）のどれかにする。
-
-### 構築
-
-```text
-コンビニで働く魔王の話を作りたい。一人称の俺で、Web連載。plot.md と characters.md を作って。本文はまだいらない。
-```
-
-`plot.md` の先頭にログライン、視点、一人称、結末、クライマックスが入る。キャラごとに口調サンプルが3つ付く。
+雛形を置いたら、依頼文から分かる項目だけを埋め、ログライン、視点、結末のうち埋まらないものを質問して止まる。質問は最大3つで、この回は本文を書かない。答えると `plot.md` の先頭が次のように固まり、キャラごとに口調サンプルが3つ付く。
 
 ```markdown
 - ログライン: 角を隠してコンビニで働く元魔王が、正体を知る勇者の末裔に追われながら、店と居場所を守る話。
@@ -120,38 +46,40 @@ Grok Build は `.claude/skills` と `AGENTS.md` も読む。二重に置かな�
 - 結末: 魔王の名を捨て、店長代理として店に残る。勇者とは客と店員のまま決着する。
 ```
 
-`plot.md` と `characters.md` が無ければ、先に雛形が置かれる。「魔王の話を書いて」のように本文を頼んだ場合も同じで、雛形を置いて分かる項目を埋めたところで止まる。
+雛形を手で置くときは次を実行する。パスはインストール先に合わせる。
 
-ログライン、視点、結末のどれかが決まっていないときは、質問が返る（最大3つ）。足りないまま本文は書かない。
-
-### 執筆
-
-```text
-plot.md の第1話、1場面目を書いて。
+```bash
+python3 .claude/skills/light-novel/scripts/init_work.py 作品フォルダ
 ```
 
-先に場面カードを埋めて、その場面の本文だけを返す。前後の場面、新しいキャラ、解説は付かない。口調サンプルが無いキャラのセリフは書かない。
-
-### 推敲
+### 執筆: 場面カードを埋めてから、指定した場面だけを書く
 
 ```text
-第1話を推敲して。筋は変えないで。
+plot.md の第1話、1場面目を書いて
 ```
 
-視点の越境、説明台詞、AI調、口調の取り違えを最小限だけ直す。Codex に頼むときは本文を書き換えず、違反を箇所つきで返す。
+視点人物、目的、入口の圧、出口の未解決、守る既出事実を場面カードに埋めてから、その場面の本文だけを返す。前後の場面、新しいキャラ、解説は付かない。口調サンプルが無いキャラのセリフは書かない。
+
+### 推敲: 筋は変えず、違反だけを最小限直す
+
+```text
+第1話を推敲して。筋は変えないで
+```
+
+視点の越境、説明台詞、AI調、口調の取り違えだけを直す。Codex に頼んだときは本文を書き換えず、違反を箇所つきで返す。
 
 ```text
 - [視点] 3章2場面: 一人称なのに相手の内心を断定している。伝聞か、観察できる動作に置換。
 - [章末] 4章: 解決して終わっている。未解決を1つ残す。
 ```
 
-### 文体チェック、AI臭さチェック
+### 文体チェック: 本文は書き換えず、違反と判定を返す
 
 ```text
-episode01.md、AI臭くないか、ラノベらしい文体になってるかチェックして。
+episode01.md、AI臭くないか、ラノベらしい文体になってるかチェックして
 ```
 
-本文は書き換えない。機械検査の結果に判断の項目を足して、違反一覧、判定、統計の順で返す。
+機械検査のスクリプトで違反を拾い、テンポ、口調、掛け合い、AI臭さなど、機械では決められない項目の判定を足して返す。返す順は違反一覧、判定、統計。`plot.md` が無くてもチェックできる。
 
 ```text
 - [冒頭] 3行目: 天気・目覚め・通学路で始まっている。視点人物の欠落かフックが見える場面から入る。
@@ -168,7 +96,55 @@ episode01.md、AI臭くないか、ラノベらしい文体になってるかチ
 会話比率 14% / 地の文の平均文長 24.6字
 ```
 
-上の例は `tests/fixtures/ai_like.md` を検査したときの出力の抜粋。違反の行はスクリプトの出力そのまま。判定はエージェントが付けたもので、実行ごとに変わることがある。
+上の出力は `tests/fixtures/ai_like.md` を検査したときの抜粋。違反の行はスクリプトの出力そのままで、判定はエージェントが付けたものなので実行ごとに変わりうる。
+
+機械検査だけを自分で回すときは次を実行する。ファイルを渡さなければ標準入力から読む。違反があると終了コードが1になる。
+
+```bash
+python3 .claude/skills/light-novel/scripts/check_style.py episode01.md
+```
+
+## エージェント別の置き場所
+
+`npx skills add` を使わず手で置くときは、`skills/light-novel/` をフォルダごと次の場所へコピーする。
+
+| エージェント | `-a` の値 | プロジェクト用 | 個人用 | 常時指示 |
+| --- | --- | --- | --- | --- |
+| Claude Code | `claude-code` | `.claude/skills/light-novel/` | `~/.claude/skills/light-novel/` | `CLAUDE.md` |
+| Codex | `codex` | `.agents/skills/light-novel/` | `~/.agents/skills/light-novel/` | `AGENTS.md` |
+| Grok Build | `grok` | `.grok/skills/light-novel/` | `~/.grok/skills/light-novel/` | `AGENTS.md`（Codex と同じもの） |
+
+- Claude Code では、依頼が呼び出し条件に合えば自動で起動する。明示するときは `/light-novel`。
+- Codex はレビュー役に向く。本文の書き換えを頼まれていないときは、`references/review.md` の形で違反だけを返す。
+- Grok Build は `.claude/skills` と `AGENTS.md` も読むので、同じスキルを二重に置かない。常時文脈に載せるのは `AGENTS.md` の呼び出し条件1行とルール5行だけにして、手順はスキルの起動時に読ませる。
+- 常時指示に書いてあるのはスキルへのポインタと最小限のルールだけで、手順はすべて `SKILL.md` 側にある。
+
+## ファイル構成
+
+```text
+skills/light-novel/
+  SKILL.md                  スキル本体。依頼の分け方、手順、制約
+  references/structure.md   ログラインから場面カードまでの構成
+  references/style.md       視点、地の文と会話、表記、AI調として削る語
+  references/review.md      レビューで違反を返す形
+  references/check.md       文体チェックの手順と判断の項目
+  references/templates.md   雛形の書き方と置き方
+  assets/plot.md            plot.md の雛形（正本）
+  assets/characters.md      characters.md の雛形（正本）
+  scripts/init_work.py      作品フォルダに雛形を置く
+  scripts/check_style.py    文体チェックの機械検査
+```
+
+2つのスクリプトは Python 3 の標準ライブラリだけで動く。Python が無い環境でもスキルは使え、雛形は `assets/` から書き写し、機械検査の項目は `references/check.md` を見て目で確かめる。
+
+このリポジトリでは `.claude/skills/light-novel` を `skills/light-novel/` へのシンボリックリンクにしてあり、リポジトリ内の Claude Code からもそのまま使える。
+
+## 呼び出し条件は4か所で同じ文言にしている
+
+- 使う: 日本語のラノベ、ライトノベル、Web小説について、企画、プロット、キャラ、地の文、セリフ、章立て、文体の作成、執筆、推敲、レビュー、文体やAI臭さのチェックを頼まれたとき。
+- 使わない: 純文学、脚本、論文、翻訳。
+
+同じ文言が `SKILL.md` の description、`CLAUDE.md`、`AGENTS.md`、この README にある。条件を変えるときは4か所とも直す。
 
 ## 開発
 
@@ -176,7 +152,7 @@ episode01.md、AI臭くないか、ラノベらしい文体になってるかチ
 python3 -m unittest discover -s tests
 ```
 
-`tests/` はスキルの外にあるので、`npx skills add` では入らない。
+`tests/` はスキルのフォルダの外にあるので、`npx skills add` では入らない。不具合や要望は GitHub の Issues へ。
 
 ## ライセンス
 
