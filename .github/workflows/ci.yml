@@ -38,7 +38,8 @@ jobs:
           cd "$work"
           npx -y skills@latest add "$GITHUB_WORKSPACE" -a claude-code --copy -y
           for f in SKILL.md assets/plot.md assets/characters.md \
-                   scripts/check_style.py scripts/init_work.py references/check.md; do
+                   scripts/check_style.py scripts/init_work.py references/check.md \
+                   references/fix.md; do
             test -f ".claude/skills/light-novel/$f" || { echo "missing: $f"; exit 1; }
           done
           python3 .claude/skills/light-novel/scripts/init_work.py novel
