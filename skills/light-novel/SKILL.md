@@ -1,7 +1,7 @@
 ---
 name: light-novel
 description: |
-  ユーザーが日本語のラノベ、ライトノベル、Web小説について、企画、プロット、キャラ、地の文、セリフ、章立て、文体の作成、執筆、推敲、レビューを頼んだときに使う。
+  ユーザーが日本語のラノベ、ライトノベル、Web小説について、企画、プロット、キャラ、地の文、セリフ、章立て、文体の作成、執筆、推敲、レビュー、文体やAI臭さのチェックを頼んだときに使う。
   純文学、脚本、論文、翻訳には使わない。
 license: Apache-2.0
 ---
@@ -28,7 +28,7 @@ license: Apache-2.0
 | --- | --- | --- |
 | 構築 | ログライン、結末、キャラ口調、話ビート、場面カード | 本文、世界設定の百科 |
 | 執筆 | 指定シーンまたは指定章の本文 | 前後章の先書き、新キャラの追加 |
-| 推敲 | 視点漏れ、説明、AI調、口調の検査と最小修正 | 筋の勝手な改変、文体の盛り直し |
+| 推敲 | 視点漏れ、説明、AI調、口調の検査と最小修正。文体チェックとAI臭さチェック | 筋の勝手な改変、文体の盛り直し |
 
 不足があるときの質問は最大3つ。足りないまま本文を書かない。
 
@@ -38,6 +38,7 @@ license: Apache-2.0
 - 文体: [references/style.md](references/style.md)
 - 雛形: [references/templates.md](references/templates.md)
 - レビュー（Codex 向け）: [references/review.md](references/review.md)
+- 文体チェックとAI臭さチェック: [references/check.md](references/check.md)
 
 ## 仕様
 
@@ -60,6 +61,8 @@ license: Apache-2.0
 6. 差分の要約は頼まれたときだけ、3行以内。
 
 Codex でレビューを頼まれたときは本文を書き換えず、[references/review.md](references/review.md) の違反を箇所つきで返す。
+
+ラノベらしい文体か、AI臭くないかのチェックを頼まれたときは、本文を書き換えず [references/check.md](references/check.md) の手順で返す。`plot.md` が無くても行う。
 
 ## 制約
 

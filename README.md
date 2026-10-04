@@ -29,11 +29,15 @@ skills/light-novel/
   references/style.md
   references/review.md
   references/templates.md
+  references/check.md
+  scripts/check_style.py
 ```
+
+`scripts/check_style.py` は文体チェックの機械検査に使う。Python 3 の標準ライブラリだけで動く。Python が無くてもスキルは使える。
 
 呼び出し条件は SKILL.md の description、CLAUDE.md、AGENTS.md で同じ文言にしている。
 
-- 使う: 日本語のラノベ、ライトノベル、Web小説について、企画、プロット、キャラ、地の文、セリフ、章立て、文体の作成、執筆、推敲、レビューを頼まれたとき。
+- 使う: 日本語のラノベ、ライトノベル、Web小説について、企画、プロット、キャラ、地の文、セリフ、章立て、文体の作成、執筆、推敲、レビュー、文体やAI臭さのチェックを頼まれたとき。
 - 使わない: 純文学、脚本、論文、翻訳。
 
 変えるときは3つとも直す。
@@ -77,6 +81,25 @@ Grok Build は `.claude/skills` と `AGENTS.md` も読む。二重に置かな�
 2. 構築を頼む。本文はまだ書かせない。
 3. 話を指定して執筆を頼む。
 4. 推敲は Codex にレビューとして頼む。
+5. 文体やAI臭さを確かめたいときは、本文を渡してチェックを頼む。機械検査だけなら次を実行する。
+
+   ```bash
+   python3 .claude/skills/light-novel/scripts/check_style.py 本文.md
+   ```
+
+   パスはインストール先に合わせる。Codex なら `.agents/skills/`、Grok Build なら `.grok/skills/`。
+
+   ```bash
+   cat 本文.md | python3 .claude/skills/light-novel/scripts/check_style.py
+   ```
+
+## 開発
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+`tests/` はスキルの外にあるので、`npx skills add` では入らない。
 
 ## ライセンス
 
