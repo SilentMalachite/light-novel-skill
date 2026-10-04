@@ -30,10 +30,13 @@ skills/light-novel/
   references/review.md
   references/templates.md
   references/check.md
+  assets/plot.md
+  assets/characters.md
   scripts/check_style.py
+  scripts/init_work.py
 ```
 
-`scripts/check_style.py` は文体チェックの機械検査に使う。Python 3 の標準ライブラリだけで動く。Python が無くてもスキルは使える。
+`assets/` は雛形の正本。`scripts/init_work.py` は作品フォルダに雛形を置く。`scripts/check_style.py` は文体チェックの機械検査に使う。どちらも Python 3 の標準ライブラリだけで動く。Python が無くてもスキルは使える。
 
 呼び出し条件は SKILL.md の description、CLAUDE.md、AGENTS.md で同じ文言にしている。
 
@@ -77,7 +80,12 @@ Grok Build は `.claude/skills` と `AGENTS.md` も読む。二重に置かな�
 
 ## 使わせ方
 
-1. `references/templates.md` から `plot.md` と `characters.md` を作品フォルダに置く。
+1. 「〜を書いて」「〜を執筆して」「〜を作って」と頼むと、作品フォルダに `plot.md` と `characters.md` の雛形が自動で置かれる。作品フォルダを指定しなければ作業ディレクトリに置く。既にあるファイルは上書きしない。手で置くときは次を実行する。
+
+   ```bash
+   python3 .claude/skills/light-novel/scripts/init_work.py 作品フォルダ
+   ```
+
 2. 構築を頼む。本文はまだ書かせない。
 3. 話を指定して執筆を頼む。
 4. 推敲は Codex にレビューとして頼む。
@@ -111,6 +119,8 @@ Grok Build は `.claude/skills` と `AGENTS.md` も読む。二重に置かな�
 - 一人称: 俺
 - 結末: 魔王の名を捨て、店長代理として店に残る。勇者とは客と店員のまま決着する。
 ```
+
+`plot.md` と `characters.md` が無ければ、先に雛形が置かれる。「魔王の話を書いて」のように本文を頼んだ場合も同じで、雛形を置いて分かる項目を埋めたところで止まる。
 
 ログライン、視点、結末のどれかが決まっていないときは、質問が返る（最大3つ）。足りないまま本文は書かない。
 
