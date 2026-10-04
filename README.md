@@ -34,7 +34,7 @@ npx skills add SilentMalachite/light-novel-skill -a grok
 1. 書きたい話を頼む。作品フォルダに `plot.md` と `characters.md` の雛形が置かれ、質問が返る。
 2. 質問に答えて、ログライン、視点、結末、キャラの口調を固める。
 3. 話と場面を指定して本文を頼む。
-4. 書けた本文の推敲か、文体チェックを頼む。
+4. 書けた本文の推敲か、文体チェックを頼む。チェックだけでは書き換えない。直すときは「直して」と頼む。
 
 ### 構築: 「〜を書いて」と頼むと、まず雛形が置かれる
 
@@ -86,7 +86,7 @@ plot.md の第1話、1場面目を書いて
 - [章末] 4章: 解決して終わっている。未解決を1つ残す。
 ```
 
-### 文体チェック: 本文は書き換えず、違反と判定を返す
+### 文体チェック: 頼まれなければ書き換えず、違反と判定を返す
 
 ```text
 episode01.md、AI臭くないか、ラノベらしい文体になってるかチェックして
@@ -117,6 +117,34 @@ episode01.md、AI臭くないか、ラノベらしい文体になってるかチ
 python3 .claude/skills/light-novel/scripts/check_style.py episode01.md
 ```
 
+### 文体の修正: 「直して」と頼むと、チェックしてから書き換える
+
+```text
+episode01.md、AI臭さをチェックして直して
+```
+
+チェックだけの依頼と違い、本文のファイルを上書きする。句点と記号はスクリプトが直し、AI定型、感情ラベル、文末、比喩などはエージェントが `references/fix.md` の直し方で、違反のある文だけを直す。直したあとにもう一度検査し、違反が残っていれば最大3回まで直し直す。筋、固有名詞、セリフの中身、視点は変えず、字数は元の±15%以内に収める。
+
+チャットに返すのは、直した件数と、直さずに残した違反の理由だけ。
+
+```text
+直した: 7件（句点 1, 比喩 2, 感情ラベル 1, 文末 1, AI定型 1, 章末 1）
+残した:
+- [長文] 31行目: 山場の独白。意図した長文として残す。
+字数 3120 → 3015（-3%）/ セリフ変更なし
+```
+
+`tests/fixtures/ai_like.md` を直した見本が `tests/fixtures/ai_like_fixed.md` にある。スクリプトの修正と比較は自分でも回せる。
+
+```bash
+# 句点と記号だけを直して書き戻す
+python3 .claude/skills/light-novel/scripts/check_style.py --fix episode01.md
+# 書き換え前と比べる。違反の増減、セリフの変更、字数の増減を出す
+python3 .claude/skills/light-novel/scripts/check_style.py --baseline episode01.orig.md episode01.md
+```
+
+`--json` を付けると、違反を行番号と該当箇所つきの JSON で出す。
+
 ## エージェント別の置き場所
 
 `npx skills add` を使わず手で置くときは、`skills/light-novel/` をフォルダごと次の場所へコピーする。
@@ -140,11 +168,12 @@ skills/light-novel/
   references/style.md       視点、地の文と会話、表記、AI調として削る語
   references/review.md      レビューで違反を返す形
   references/check.md       文体チェックの手順と判断の項目
+  references/fix.md         文体の修正の手順と直し方
   references/templates.md   雛形の書き方と置き方
   assets/plot.md            plot.md の雛形（正本）
   assets/characters.md      characters.md の雛形（正本）
   scripts/init_work.py      作品フォルダに雛形を置く
-  scripts/check_style.py    文体チェックの機械検査
+  scripts/check_style.py    文体チェックの機械検査、句点と記号の自動修正、書き換え前後の比較
 ```
 
 2つのスクリプトは Python 3 の標準ライブラリだけで動く。Python が無い環境でもスキルは使え、雛形は `assets/` から書き写し、機械検査の項目は `references/check.md` を見て目で確かめる。
